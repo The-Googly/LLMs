@@ -1,0 +1,827 @@
+<title>LLM Evolution Tree</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=JetBrains+Mono:wght@400;500;700&display=swap">
+
+<style>
+/* ─── tokens ─── light: plotter pens on cool paper ─────────────── */
+:root{
+  --ground:#EAEEED; --paper:#F6F9F8; --plate:#FFFFFF;
+  --ink:#131C1E; --ink-2:#3F4F4D; --muted:#6C7C7A;
+  --rule:#C4CFCD; --rule-soft:#DBE2E0; --grid:#DDE4E2;
+  --shadow:0 1px 2px rgba(19,28,30,.07), 0 10px 28px rgba(19,28,30,.07);
+  --focus:#0E6F68;
+  --pen-trunk:#162225;  --pen-encoder:#5C6F80; --pen-scaling:#96700D;
+  --pen-block:#0D6E67;  --pen-position:#527129; --pen-kv:#A7461D;
+  --pen-linear:#B96812; --pen-moe:#6C4297;     --pen-systems:#226E4D;
+  --pen-post:#A33148;   --pen-reason:#892D6C;  --pen-topo:#31519A;
+  --pen-mm:#B03874;     --pen-frontier:#162225;
+}
+/* ─── dark: CRT plotter on deep slate ──────────────────────────── */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0D1415; --paper:#121A1B; --plate:#182224;
+    --ink:#E5ECEA; --ink-2:#B1BFBC; --muted:#7C8D8A;
+    --rule:#2A3839; --rule-soft:#1F2A2C; --grid:#192324;
+    --shadow:0 1px 2px rgba(0,0,0,.45), 0 12px 34px rgba(0,0,0,.4);
+    --focus:#3FC0B4;
+    --pen-trunk:#C7D4D2;  --pen-encoder:#91A5B4; --pen-scaling:#D7AA31;
+    --pen-block:#36B5AA;  --pen-position:#94BA5A; --pen-kv:#E08153;
+    --pen-linear:#E5A23F; --pen-moe:#AE8AD8;     --pen-systems:#4FBD8B;
+    --pen-post:#E2718A;   --pen-reason:#D274B4;  --pen-topo:#7E9BE8;
+    --pen-mm:#E876AF;     --pen-frontier:#C7D4D2;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0D1415; --paper:#121A1B; --plate:#182224;
+  --ink:#E5ECEA; --ink-2:#B1BFBC; --muted:#7C8D8A;
+  --rule:#2A3839; --rule-soft:#1F2A2C; --grid:#192324;
+  --shadow:0 1px 2px rgba(0,0,0,.45), 0 12px 34px rgba(0,0,0,.4);
+  --focus:#3FC0B4;
+  --pen-trunk:#C7D4D2;  --pen-encoder:#91A5B4; --pen-scaling:#D7AA31;
+  --pen-block:#36B5AA;  --pen-position:#94BA5A; --pen-kv:#E08153;
+  --pen-linear:#E5A23F; --pen-moe:#AE8AD8;     --pen-systems:#4FBD8B;
+  --pen-post:#E2718A;   --pen-reason:#D274B4;  --pen-topo:#7E9BE8;
+  --pen-mm:#E876AF;     --pen-frontier:#C7D4D2;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.5;
+  height:100vh; display:flex; flex-direction:column; overflow:hidden;
+}
+
+/* ─── header ─── */
+.top{
+  display:flex; align-items:flex-end; gap:24px; flex-wrap:wrap;
+  padding:16px 22px 13px; border-bottom:1px solid var(--rule);
+  background:var(--paper);
+}
+.brand h1{
+  margin:0; font-size:19px; font-weight:700; letter-spacing:-.015em;
+  text-wrap:balance;
+}
+.brand p{
+  margin:3px 0 0; font-size:12.5px; color:var(--muted);
+  font-family:"JetBrains Mono",ui-monospace,monospace; letter-spacing:.01em;
+}
+.tools{display:flex; gap:8px; align-items:center; margin-left:auto; flex-wrap:wrap}
+.field{position:relative; display:flex}
+input[type=search]{
+  font:500 13px/1 "Archivo",sans-serif; color:var(--ink);
+  background:var(--plate); border:1px solid var(--rule); border-radius:3px;
+  padding:8px 10px; width:186px; outline:none;
+}
+input[type=search]:focus-visible{border-color:var(--focus); box-shadow:0 0 0 2px color-mix(in srgb,var(--focus) 26%,transparent)}
+.btn{
+  font:600 11.5px/1 "JetBrains Mono",monospace; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--ink-2); background:var(--plate); border:1px solid var(--rule);
+  border-radius:3px; padding:9px 11px; cursor:pointer;
+}
+.btn:hover{color:var(--ink); border-color:var(--ink-2)}
+.btn:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
+
+/* ─── legend / filter rail ─── */
+.rail{
+  display:flex; gap:5px; flex-wrap:wrap; align-items:center;
+  padding:9px 22px; border-bottom:1px solid var(--rule);
+  background:var(--paper);
+}
+.rail .lbl{
+  font:600 10.5px/1 "JetBrains Mono",monospace; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--muted); margin-right:5px;
+}
+.chip{
+  display:inline-flex; align-items:center; gap:6px; cursor:pointer;
+  font:500 11.5px/1 "Archivo",sans-serif; color:var(--ink-2);
+  border:1px solid var(--rule-soft); background:transparent;
+  border-radius:99px; padding:5px 10px 5px 7px;
+}
+.chip .sw{width:9px; height:9px; border-radius:2px; background:var(--c); flex:none}
+.chip[aria-pressed="true"]{color:var(--ink); border-color:var(--c); background:color-mix(in srgb,var(--c) 11%,transparent)}
+.chip[aria-pressed="false"]{opacity:.42}
+.chip:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
+
+/* ─── stage ─── */
+.stage{flex:1; display:flex; min-height:0}
+.canvas{
+  flex:1; position:relative; overflow:hidden; cursor:grab;
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0/100% 28px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 100%,
+    var(--ground);
+}
+.canvas.drag{cursor:grabbing}
+svg{display:block; width:100%; height:100%; touch-action:none}
+
+.edge{fill:none; stroke:var(--rule); stroke-width:1.1; opacity:.55}
+.edge.lit{stroke:var(--c); stroke-width:2.1; opacity:1}
+.edge.dim{opacity:.1}
+
+.node{cursor:pointer}
+.node rect.body{
+  fill:var(--plate); stroke:var(--c); stroke-width:1.4; rx:3;
+}
+.node.pivot rect.body{stroke-width:2.6}
+.node rect.tab{fill:var(--c)}
+.node text.nm{
+  font-family:"Archivo",sans-serif; font-size:13px; font-weight:600;
+  fill:var(--ink); letter-spacing:-.005em;
+}
+.node text.yr{
+  font-family:"JetBrains Mono",monospace; font-size:10px; font-weight:500;
+  fill:var(--muted); letter-spacing:.03em;
+}
+.node.dim{opacity:.17}
+.node.lit rect.body{fill:color-mix(in srgb,var(--c) 13%,var(--plate))}
+.node.sel rect.body{stroke-width:3}
+.node:focus-visible rect.body{stroke:var(--focus); stroke-width:3}
+
+.yearline{stroke:var(--rule-soft); stroke-width:1; stroke-dasharray:2 5}
+.yeartext{
+  font-family:"JetBrains Mono",monospace; font-size:11px; font-weight:700;
+  fill:var(--muted); letter-spacing:.06em;
+}
+.eratext{
+  font-family:"JetBrains Mono",monospace; font-size:10px; font-weight:500;
+  fill:var(--muted); letter-spacing:.14em; text-transform:uppercase;
+}
+.laneguide{stroke:var(--c); stroke-width:1; opacity:.11}
+.lanecap{
+  font-family:"JetBrains Mono",monospace; font-size:10.5px; font-weight:700;
+  letter-spacing:.1em; text-transform:uppercase; fill:var(--c);
+}
+
+/* ─── detail drawer ─── */
+.detail{
+  width:392px; flex:none; background:var(--paper);
+  border-left:1px solid var(--rule); overflow-y:auto; padding:22px 24px 40px;
+}
+.detail .eyebrow{
+  font:700 10.5px/1 "JetBrains Mono",monospace; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--c,var(--muted));
+  display:flex; align-items:center; gap:7px; margin-bottom:9px;
+}
+.detail .eyebrow .sw{width:10px;height:10px;border-radius:2px;background:var(--c);flex:none}
+.detail h2{
+  margin:0 0 3px; font-size:23px; font-weight:700; letter-spacing:-.02em;
+  line-height:1.18; text-wrap:balance;
+}
+.detail .meta{
+  font:500 12px/1.4 "JetBrains Mono",monospace; color:var(--muted);
+  margin:0 0 18px; letter-spacing:.02em;
+}
+.detail dl{margin:0; display:flex; flex-direction:column; gap:15px}
+.detail dt{
+  font:700 10.5px/1 "JetBrains Mono",monospace; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--muted); margin-bottom:5px;
+}
+.detail dd{
+  margin:0; font-family:"Newsreader",Georgia,serif; font-size:15.5px;
+  line-height:1.52; color:var(--ink-2);
+}
+.detail dd strong{color:var(--ink); font-weight:500}
+.detail .divider{height:1px; background:var(--rule); margin:20px 0}
+.parents{display:flex; flex-direction:column; gap:6px}
+.plink{
+  display:flex; align-items:center; gap:8px; text-align:left; width:100%;
+  font:500 13px/1.3 "Archivo",sans-serif; color:var(--ink-2);
+  background:var(--plate); border:1px solid var(--rule-soft);
+  border-radius:3px; padding:8px 10px; cursor:pointer;
+}
+.plink:hover{color:var(--ink); border-color:var(--ink-2)}
+.plink:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
+.plink .sw{width:8px;height:8px;border-radius:2px;background:var(--c);flex:none}
+.plink .arw{margin-left:auto; font-family:"JetBrains Mono",monospace; color:var(--muted); font-size:11px}
+.detail a.paper{
+  display:inline-block; font:500 12.5px/1 "JetBrains Mono",monospace;
+  color:var(--focus); text-decoration:none; border-bottom:1px solid currentColor;
+  padding-bottom:2px;
+}
+.detail a.paper:hover{color:var(--ink)}
+.empty{color:var(--muted); font-family:"Newsreader",Georgia,serif; font-size:15.5px; line-height:1.55}
+.empty h2{font-family:"Archivo",sans-serif; color:var(--ink)}
+.empty ul{padding-left:17px; margin:14px 0 0}
+.empty li{margin-bottom:7px}
+kbd{
+  font:600 11px/1 "JetBrains Mono",monospace; background:var(--plate);
+  border:1px solid var(--rule); border-radius:3px; padding:2px 5px; color:var(--ink-2);
+}
+
+.hint{
+  position:absolute; left:14px; bottom:12px; z-index:3; pointer-events:none;
+  font:500 10.5px/1.5 "JetBrains Mono",monospace; color:var(--muted);
+  letter-spacing:.03em;
+}
+
+@media (max-width:900px){
+  body{overflow:auto; height:auto}
+  .stage{flex-direction:column}
+  .canvas{height:66vh; flex:none}
+  .detail{width:auto; border-left:0; border-top:1px solid var(--rule)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+.node,.edge{transition:opacity .16s ease, stroke-width .16s ease}
+</style>
+
+<header class="top">
+  <div class="brand">
+    <h1>LLM Evolution Tree</h1>
+    <p>transformer 2017 → the 2026 frontier · 64 nodes · every edge is one design decision</p>
+  </div>
+  <div class="tools">
+    <div class="field"><input type="search" id="q" placeholder="Search nodes…" aria-label="Search nodes"></div>
+    <button class="btn" id="fit">Fit</button>
+    <button class="btn" id="clear">Clear</button>
+  </div>
+</header>
+
+<div class="rail" id="rail"><span class="lbl">Branches</span></div>
+
+<div class="stage">
+  <div class="canvas" id="canvas">
+    <svg id="svg" aria-label="Evolution graph of large language model architectures">
+      <g id="world">
+        <g id="gYears"></g>
+        <g id="gLanes"></g>
+        <g id="gEdges"></g>
+        <g id="gNodes"></g>
+      </g>
+    </svg>
+    <div class="hint">drag to pan · scroll to zoom · click a node to trace its lineage</div>
+  </div>
+  <aside class="detail" id="detail"></aside>
+</div>
+
+<script>
+/* ══════════════ branch definitions ══════════════ */
+const B = {
+  trunk:    {n:"Trunk",             c:"var(--pen-trunk)"},
+  encoder:  {n:"Encoder branch",    c:"var(--pen-encoder)"},
+  scaling:  {n:"Scaling laws",      c:"var(--pen-scaling)"},
+  block:    {n:"Block refit",       c:"var(--pen-block)"},
+  position: {n:"Position / context",c:"var(--pen-position)"},
+  kv:       {n:"KV cache",          c:"var(--pen-kv)"},
+  linear:   {n:"Linear attention",  c:"var(--pen-linear)"},
+  moe:      {n:"Conditional compute",c:"var(--pen-moe)"},
+  systems:  {n:"Systems",           c:"var(--pen-systems)"},
+  post:     {n:"Alignment",         c:"var(--pen-post)"},
+  reason:   {n:"Reasoning / RLVR",  c:"var(--pen-reason)"},
+  topo:     {n:"Topology & optim.", c:"var(--pen-topo)"},
+  mm:       {n:"Multimodality",     c:"var(--pen-mm)"},
+  frontier: {n:"2026 frontier",     c:"var(--pen-frontier)"}
+};
+
+/* lane x-index per branch (fractional allowed) */
+const LANE = {mm:-6, encoder:-5, scaling:-4, block:-3, position:-2, kv:-1,
+              trunk:0, linear:1, moe:2, systems:3, post:4, reason:5, topo:6};
+
+/* ══════════════ nodes ══════════════
+   id, name, year, slot (0-1 within year), branch, lane (override), pivot,
+   parents[], edge, why, impact, paper{t,u} */
+const N = [
+/* ── ancestry + trunk ── */
+{id:"seq2seq",n:"seq2seq (RNN/LSTM)",y:2014,s:.05,b:"trunk",p:[],
+ e:"Encode a whole source sentence into one fixed-size vector, decode from it.",
+ w:"First end-to-end neural translation with no hand-built alignment machinery.",
+ i:"Established the encoder→decoder shape — and its fatal flaw: one vector is an information bottleneck."},
+{id:"bahdanau",n:"Bahdanau attention",y:2014,s:.55,b:"trunk",pv:1,p:["seq2seq"],
+ e:"Replace the single context vector with a weighted sum over all encoder states, weights learned per output step.",
+ w:"The bottleneck. Long sentences degraded badly.",
+ i:"Ancestor of every line in this graph. Everything after 2017 is a variation on “weighted sum over other positions, weights from a learned similarity.”",
+ pa:{t:"arXiv:1409.0473",u:"https://arxiv.org/abs/1409.0473"}},
+{id:"elmo",n:"ELMo",y:2018,s:.02,b:"encoder",p:["seq2seq"],
+ e:"Contextual word vectors from a pretrained bidirectional LM, fed into task models.",
+ w:"word2vec gives one vector per word type; “bank” needs two.",
+ i:"Proved “pretrain a LM, transfer the representations.” GPT-1 and BERT both take this and drop the LSTM."},
+
+{id:"tf",n:"Transformer",y:2017,s:.35,b:"trunk",pv:1,p:["bahdanau"],
+ e:"Delete recurrence. Self-attention everywhere, plus multi-head projections, sinusoidal positions, residual + LayerNorm wrappers.",
+ w:"RNNs need O(N) unparallelizable steps per sequence. Attention makes every position reachable in one hop and the sequence parallel over time.",
+ i:"The entire field. Also seeded four sub-decisions that each became their own branch: √dₖ scaling, multi-head, norm placement, additive position.",
+ pa:{t:"arXiv:1706.03762",u:"https://arxiv.org/abs/1706.03762"}},
+
+{id:"bert",n:"BERT",y:2018,s:.62,b:"encoder",p:["tf"],
+ e:"Keep the encoder only; train with masked LM (bidirectional) instead of next-token.",
+ w:"For understanding tasks, seeing both directions is strictly more information than causal.",
+ i:"Dominated 2018–2020. But MLM is not generative and scales differently — this branch plateaued as a general model and survives as embedding models, rerankers, and the encoders bolted onto VLMs.",
+ pa:{t:"arXiv:1810.04805",u:"https://arxiv.org/abs/1810.04805"}},
+{id:"modernbert",n:"ModernBERT",y:2024,s:.05,b:"encoder",p:["bert","rope","swiglu"],
+ e:"Same MLM objective, modern block: RoPE, GeGLU, unpadding, long context.",
+ w:"The encoder branch never got the 2019–2023 block upgrades.",
+ i:"Refreshed the retrieval/embedding stack that RAG and rerankers run on."},
+
+{id:"gpt1",n:"GPT-1",y:2018,s:.3,b:"trunk",pv:1,p:["tf","elmo"],
+ e:"Drop the encoder and the cross-attention sublayer. Block = masked self-attention + FFN. Generative pretrain, then supervised fine-tune, same weights.",
+ w:"A plain LM has no source sentence. Causal LM needs no labels, so pretraining data is effectively unlimited.",
+ i:"The winning branch. Everything below descends from this block."},
+{id:"gpt2",n:"GPT-2",y:2019,s:.25,b:"trunk",pv:1,p:["gpt1"],
+ e:"Pre-LN, 1/√N residual init, a final LN before unembedding, byte-level BPE, and 10× scale (1.5B, 48 layers).",
+ w:"Post-LN gradients are depth-unstable and need warmup babysitting; byte-level BPE removes OOV entirely.",
+ i:"Pre-LN is still the default in 2026, as is byte-BPE. Also the first serious claim that a plain LM does tasks zero-shot."},
+{id:"gpt3",n:"GPT-3",y:2020,s:.2,b:"trunk",pv:1,p:["gpt2"],
+ e:"175B params, alternating dense and locally-banded sparse attention. No architectural novelty — the edge is scale plus a reframing.",
+ w:"If zero-shot works a bit, does more scale make fine-tuning unnecessary?",
+ i:"In-context learning. The deliverable became a prompt, not a fine-tune — which is why every branch after this is measured in inference cost.",
+ pa:{t:"arXiv:2005.14165",u:"https://arxiv.org/abs/2005.14165"}},
+
+/* ── scaling ── */
+{id:"kaplan",n:"Kaplan scaling laws",y:2020,s:.62,b:"scaling",p:["gpt3"],
+ e:"Loss follows smooth power laws in params, data and compute. Given fixed compute, spend most of it on parameters.",
+ w:"Turn model design into a budgeting problem instead of guesswork.",
+ i:"Justified the 2020–21 parameter race (Gopher 280B, MT-NLG 530B). Also wrong about the ratio, because of a learning-rate schedule artifact.",
+ pa:{t:"arXiv:2001.08361",u:"https://arxiv.org/abs/2001.08361"}},
+{id:"chinchilla",n:"Chinchilla",y:2022,s:.1,b:"scaling",pv:1,p:["kaplan"],
+ e:"Redo the sweep with per-run LR tuning. Optimum is params and tokens scaled roughly equally (~20 tokens/param), not param-heavy.",
+ w:"Kaplan's schedule wasn't re-tuned per run, biasing the fit.",
+ i:"The biggest single course correction in the field. 70B beat 280B. Killed the parameter race and produced LLaMA directly.",
+ pa:{t:"arXiv:2203.15556",u:"https://arxiv.org/abs/2203.15556"}},
+{id:"overtrain",n:"Overtraining + distillation",y:2023,s:.15,b:"scaling",p:["chinchilla"],
+ e:"Train small models on 10–40× Chinchilla tokens, and distill from a large teacher at the logit level.",
+ w:"For a model served billions of times, training compute is a rounding error against inference compute.",
+ i:"The entire small-open-model category — LLaMA 7B, Phi, Gemma, Qwen small, SmolLM. Gemma has used distillation as its primary recipe since Gemma 2."},
+
+/* ── block refit ── */
+{id:"rmsnorm",n:"RMSNorm",y:2019,s:.75,b:"block",p:["tf"],
+ e:"Drop mean-centering and the β bias; normalize by RMS only.",
+ w:"Re-scaling stabilizes training; re-centering contributes ~nothing. One pass over the vector instead of two.",
+ i:"10–40% faster per norm call, and Pre-LN calls a norm twice per layer. Free win, universal adoption.",
+ pa:{t:"arXiv:1910.07467",u:"https://arxiv.org/abs/1910.07467"}},
+{id:"swiglu",n:"SwiGLU",y:2020,s:.4,b:"block",p:["tf"],
+ e:"Gated FFN: one projection gates another elementwise, with Swish as the gate.",
+ w:"A learned, input-dependent, per-dimension gate beats one fixed nonlinearity applied uniformly.",
+ i:"Standard FFN in LLaMA, PaLM, Mistral, Qwen, Gemma. Costs a third matrix; hidden width shrunk to compensate.",
+ pa:{t:"arXiv:2002.05202",u:"https://arxiv.org/abs/2002.05202"}},
+{id:"rope",n:"RoPE",y:2021,s:.25,b:"block",pv:1,p:["tf"],
+ e:"Stop adding position. Rotate Q and K by an angle proportional to absolute index; rotation composition makes the dot product depend only on the relative offset.",
+ w:"Attention routes by dot product, and routing should depend on distance, not on where in the document a pair sits. Absolute embeddings only approximate this.",
+ i:"Near-total adoption — and the enabler of context extension, since a continuous position function can be interpolated post-hoc. A learned position table cannot.",
+ pa:{t:"arXiv:2104.09864",u:"https://arxiv.org/abs/2104.09864"}},
+{id:"qknorm",n:"QK-Norm",y:2024,s:.3,b:"block",p:["llama"],
+ e:"RMSNorm applied to Q and K before the dot product.",
+ w:"At scale, attention logits drift to huge magnitudes and cause loss spikes. Normalizing Q/K caps the logit scale directly.",
+ i:"Standard for stability in OLMo 2, Gemma 3/4, Qwen3, MiniMax M2. The architectural answer to the same problem MuonClip solves in the optimizer."},
+
+{id:"llama",n:"LLaMA",y:2023,s:.05,b:"trunk",pv:1,p:["gpt3","chinchilla","rope","rmsnorm","swiglu"],
+ e:"Not a new idea — a canonicalization. Pre-LN decoder, RMSNorm, SwiGLU, RoPE, no biases, heavily overtrained, open weights.",
+ w:"Demonstrate that the public recipe, done carefully, reaches GPT-3.5 territory at 13–65B.",
+ i:"The most-forked node in the graph. Mistral, Qwen, Yi, DeepSeek, Gemma, OLMo and Phi all start here and differ in what they replace. Read everything below as “what did you swap out of the LLaMA block.”",
+ pa:{t:"arXiv:2302.13971",u:"https://arxiv.org/abs/2302.13971"}},
+
+/* ── position / context ── */
+{id:"swa",n:"Sliding-window attention",y:2020,s:.85,b:"position",p:["tf"],
+ e:"Most layers attend only to a local window; a minority attend globally.",
+ w:"Attention is quadratic and most heads are local anyway. A window layer's KV cache is constant in sequence length.",
+ i:"Gemma 3/4 run a 5:1 local:global ratio; gpt-oss interleaves similarly. The cheapest long-context trick, and it composes with everything else."},
+{id:"alibi",n:"ALiBi",y:2021,s:.7,b:"position",p:["rope"],
+ e:"No position embedding at all — just a linear distance penalty added to attention logits.",
+ w:"Length extrapolation: a penalty that is linear in distance keeps working past the trained length.",
+ i:"Largely lost to RoPE + YaRN, but it planted the idea that position could be a bias rather than a vector."},
+{id:"yarn",n:"Position interpolation → YaRN",y:2023,s:.45,b:"position",p:["rope"],
+ e:"Rescale RoPE frequencies — uniformly, then per-frequency-band — so a 4k model can be briefly fine-tuned to 32k–128k.",
+ w:"Extrapolating RoPE past training length fails; interpolating inside the trained range does not.",
+ i:"The standard context-extension stage in every long-context recipe. Gemma 4's pp-RoPE and split base frequencies (1M global / 10k local) descend from this."},
+{id:"nope",n:"NoPE",y:2023,s:.95,b:"position",p:["alibi"],
+ e:"No positional signal whatsoever; causal masking alone lets the model infer order.",
+ w:"Tests whether explicit position is needed at all once the mask already breaks permutation symmetry.",
+ i:"Surprising comeback: used on a subset of layers in SmolLM3 and Kimi Linear, and Kimi K3 replaces RoPE with NoPE outright, letting the linear-attention layers carry position recurrently."},
+{id:"irope",n:"Llama 4 iRoPE",y:2025,s:.15,b:"position",p:["nope","yarn","swa"],
+ e:"Interleave RoPE local layers with NoPE global layers, plus inference-time attention-temperature scaling.",
+ w:"A 10M-token context target; RoPE global layers do not extrapolate that far.",
+ i:"The clearest public statement of the emerging consensus: position is a per-layer choice, not a model-wide one."},
+
+/* ── KV cache ── */
+{id:"mqa",n:"MQA",y:2019,s:.55,b:"kv",p:["tf"],
+ e:"Keep h query heads, share one K and one V across all of them.",
+ w:"Cache shrinks by exactly h — 32× at h=32.",
+ i:"Too aggressive on its own: measurable quality loss. But it defined the axis every later node moves along.",
+ pa:{t:"arXiv:1911.02150",u:"https://arxiv.org/abs/1911.02150"}},
+{id:"gqa",n:"GQA",y:2023,s:.3,b:"kv",pv:1,p:["mqa","llama"],
+ e:"g groups of query heads, one K/V per group. g=1 is MQA, g=h is MHA.",
+ w:"MQA gave up too much, MHA saves nothing. Make it a dial.",
+ i:"The default for two years — LLaMA 2/3, Mistral, Qwen, Gemma. Still the baseline any new attention must beat.",
+ pa:{t:"arXiv:2305.13245",u:"https://arxiv.org/abs/2305.13245"}},
+{id:"mla",n:"MLA",y:2024,s:.2,b:"kv",pv:1,p:["gqa"],
+ e:"Stop sharing, start compressing. Project the hidden state to a low-rank latent, cache only that, up-project to full per-head K and V at use time.",
+ w:"GQA sacrifices head diversity to save bytes. MLA keeps per-head K/V distinct and pays in a rank bottleneck instead — a much better trade.",
+ i:"DeepSeek V2/V3/R1, Kimi K2/K2.5, GLM-4.5/5. The most consequential attention change since GQA, and the reason DeepSeek's inference economics were a shock.",
+ pa:{t:"arXiv:2405.04434",u:"https://arxiv.org/abs/2405.04434"}},
+{id:"nsa",n:"NSA (native sparse attn)",y:2025,s:.1,b:"kv",p:["mla"],
+ e:"Trainable sparse attention: a compressed-token branch, a selected-token branch and a sliding window, combined by a learned gate.",
+ w:"MLA fixes cache size but attention is still O(N²) in FLOPs. Sparsity attacks the compute, not the memory.",
+ i:"Made sparsity a pretraining-time property rather than an inference-time approximation.",
+ pa:{t:"arXiv:2502.11089",u:"https://arxiv.org/abs/2502.11089"}},
+{id:"dsa",n:"DSA (lightning indexer)",y:2025,s:.62,b:"kv",pv:1,p:["nsa"],
+ e:"A cheap indexer scores all past tokens; each query attends only to its top-k (k≈2048), layered on top of MLA.",
+ w:"Get most of NSA's benefit as a drop-in on an existing MLA model.",
+ i:"~2–3× cheaper long-context serving at benchmark parity. Adopted beyond DeepSeek — GLM-5 ships MLA + DSA. The node where “attend to everything” stopped being assumed.",
+ pa:{t:"arXiv:2512.02556",u:"https://arxiv.org/pdf/2512.02556"}},
+{id:"csa",n:"CSA + HCA",y:2026,s:.15,b:"kv",p:["dsa","mla"],
+ e:"Two interleaved compressed-sparse mechanisms: CSA (pool KV 4× along sequence, indexer picks top-k blocks, sliding window for recent tokens) and HCA (compress 128×, attend densely). KV mostly in FP8.",
+ w:"The 1M-context target. Cache reduced to roughly 2% of standard attention.",
+ i:"128k → 1M default context without proportional cost. Demonstrates the 2026 pattern: not one attention mechanism but a portfolio of them at different compression ratios, interleaved by layer."},
+
+/* ── linear attention ── */
+{id:"linattn",n:"Linear attention",y:2020,s:.55,b:"linear",p:["tf"],
+ e:"Drop the softmax, use a kernel feature map, exploit associativity: φ(Q)(φ(K)ᵀV) instead of (φ(Q)φ(K)ᵀ)V.",
+ w:"O(N) instead of O(N²), and it becomes an RNN with a matrix-valued state — constant memory at decode, no KV cache at all.",
+ i:"The whole sub-branch. Cost: a fixed-size state means finite memory, and early versions were badly worse than softmax.",
+ pa:{t:"arXiv:2006.16236",u:"https://arxiv.org/abs/2006.16236"}},
+{id:"deltanet",n:"DeltaNet (delta rule)",y:2021,s:.85,b:"linear",p:["linattn"],
+ e:"Replace “accumulate into state” with a correction: erase the old association for this key, then write the new one.",
+ w:"Pure accumulation makes the state a lossy sum. The delta rule keeps it a usable associative memory.",
+ i:"Dormant until Yang et al. (2024) made it parallelizable over sequence length — which is what made it trainable at scale.",
+ pa:{t:"arXiv:2406.06484",u:"https://arxiv.org/abs/2406.06484"}},
+{id:"gla",n:"GLA / RetNet / RWKV",y:2023,s:.35,b:"linear",p:["linattn"],
+ e:"Add decay/forgetting to the recurrent state, and make the decay data-dependent, with a hardware-efficient chunkwise form.",
+ w:"A state that never forgets saturates. Gating is what lets a fixed-size state stay useful over long sequences.",
+ i:"Made linear attention trainable at the speeds required to compete, and introduced the chunkwise kernel style everything downstream uses."},
+{id:"mamba",n:"Mamba → Mamba-2",y:2023,s:.9,b:"linear",p:["linattn"],
+ e:"Selective state-space models; Mamba-2's SSD duality proves SSMs and linear attention are the same family.",
+ w:"SSMs came from a different tradition (signal processing) and needed to be reconciled with attention to be composable.",
+ i:"That reconciliation is what let SSM layers be dropped into transformer stacks — e.g. NVIDIA's Nemotron 3 (Mamba-2 + transformer + MoE).",
+ pa:{t:"arXiv:2312.00752",u:"https://arxiv.org/abs/2312.00752"}},
+{id:"gdn",n:"Gated DeltaNet",y:2024,s:.65,b:"linear",pv:1,p:["deltanet","gla","mamba"],
+ e:"Delta rule plus gated decay: erase-then-write and forget-over-time in one operator.",
+ w:"Delta rule alone has no forgetting; gating alone has no targeted correction. Recall-heavy tasks need both.",
+ i:"The first linear variant genuinely competitive with softmax attention. Shipped in Qwen3-Next and Qwen3.5.",
+ pa:{t:"arXiv:2412.06464",u:"https://arxiv.org/abs/2412.06464"}},
+{id:"kda",n:"KDA (Kimi Delta Attention)",y:2025,s:.62,b:"linear",pv:1,p:["gdn"],
+ e:"Gated DeltaNet with finer-grained per-channel gating, via a Diagonal-Plus-Low-Rank transition matrix and a custom chunkwise kernel.",
+ w:"A coarse scalar gate wastes a finite-state memory. Per-channel control uses it better at the same cost.",
+ i:"75% KV-cache reduction and ~6× decode throughput at 1M context in Kimi Linear; carried into Kimi K3.",
+ pa:{t:"arXiv:2510.26692",u:"https://arxiv.org/abs/2510.26692"}},
+{id:"hybrid",n:"Hybrid attention stacks",y:2026,s:.02,yl:"2025–26",b:"linear",pv:1,p:["kda","gdn","mla"],
+ e:"Stop choosing. Interleave linear-attention layers with a minority of full-attention layers — typically 3:1.",
+ w:"Linear layers give O(N) and no cache; the full-attention layers preserve exact long-range recall. You get most of both.",
+ i:"Where the frontier actually landed: Qwen3.5 (GDN:full 3:1), Kimi K3 (KDA:MLA 3:1), Nemotron 3 (Mamba-2 + transformer). MiniMax M2.5 is the dissenter — it went back to plain MHA for reliability."},
+
+/* ── MoE ── */
+{id:"moe91",n:"Mixture of Experts",y:2014,s:.9,yl:"1991",b:"moe",p:[],
+ e:"A gating network routes each example to specialized sub-models rather than one dense network. (Jacobs et al., 1991.)",
+ w:"Split a hard learning problem into sub-tasks and send each example to the expert that handles it.",
+ i:"The ancestral idea. Sat unused at scale for 25 years because nobody could route sparsely and efficiently."},
+{id:"sparsemoe",n:"Sparsely-Gated MoE",y:2017,s:.05,b:"moe",pv:1,p:["moe91"],
+ e:"Route each token to a top-k of thousands of expert FFNs. Only those experts compute.",
+ w:"Decouple total parameters (knowledge capacity) from active parameters per token (FLOP cost).",
+ i:"The whole branch. Also introduced its two permanent problems: load balancing and all-to-all communication cost.",
+ pa:{t:"arXiv:1701.06538",u:"https://arxiv.org/abs/1701.06538"}},
+{id:"gshard",n:"GShard",y:2020,s:.7,b:"moe",p:["sparsemoe","tf"],
+ e:"Put MoE inside the Transformer at scale, with expert-parallel sharding across devices.",
+ w:"MoE was an LSTM-era result; making it work in a transformer needed a distribution story.",
+ i:"Established expert parallelism as the standard sharding pattern."},
+{id:"switch",n:"Switch Transformer",y:2021,s:.5,b:"moe",p:["gshard"],
+ e:"Simplify to top-1 routing with a capacity factor, plus an auxiliary load-balance loss (and later ST-MoE's router z-loss).",
+ w:"Top-1 is the cheapest possible routing; the aux losses are what stop it collapsing onto favourite experts.",
+ i:"Set the standard MoE layer — and the standard MoE complaint: aux losses fight the language-modeling loss.",
+ pa:{t:"arXiv:2101.03961",u:"https://arxiv.org/abs/2101.03961"}},
+{id:"mixtral",n:"Mixtral 8×7B",y:2023,s:.65,b:"moe",p:["switch","llama"],
+ e:"First widely-used open sparse MoE: 8 experts, top-2 routing, 47B total / ~13B active.",
+ w:"Prove the economics in the open, on a LLaMA-shaped block.",
+ i:"Made MoE the default assumption for open frontier models rather than a Google curiosity."},
+{id:"dsmoe",n:"DeepSeekMoE",y:2024,s:.15,b:"moe",pv:1,p:["mixtral"],
+ e:"Two changes: fine-grained experts (many small experts, route to more of them) and shared experts (a few every token always uses).",
+ w:"With few coarse experts, each is forced to learn general-purpose material, defeating specialization. Shared experts absorb the common knowledge so routed ones can specialize.",
+ i:"This is the modern MoE layer. DeepSeek V2/V3, Qwen3-MoE, GLM, Kimi. Ratios kept getting more extreme: 671B/37B → 1T/32B → Kimi K3's 16-of-896."},
+{id:"auxfree",n:"Aux-loss-free balancing",y:2024,s:.62,b:"moe",p:["dsmoe","switch"],
+ e:"Delete the auxiliary loss. Keep a per-expert bias added to router scores, nudged up or down between steps based on observed load.",
+ w:"The aux loss is a gradient that actively degrades the LM objective in exchange for balance. A bias is a non-gradient control knob.",
+ i:"Now standard. A clean example of the recurring pattern: replace a loss-term hack with an explicit control mechanism."},
+{id:"latentmoe",n:"LatentMoE + quantile balancing",y:2026,s:.35,b:"moe",p:["auxfree","mla"],
+ e:"Compress the large expert linear layers through a latent bottleneck; derive expert allocation from router-score quantiles; train expert-parallel with static shapes.",
+ w:"At 2.8T params, expert imbalance is a scheduling problem — one straggler shard stalls the whole step.",
+ i:"MoE routing is becoming statically shaped, and therefore compiler- and hardware-friendly. Shipped in Kimi K3 and Nemotron 3 Super."},
+
+/* ── systems ── */
+{id:"flash",n:"FlashAttention",y:2022,s:.35,b:"systems",pv:1,p:["tf"],
+ e:"Never materialize the N×N score matrix in HBM. Tile into SRAM, run scores→softmax→weighted-sum per tile with a streaming exact softmax, write only the output.",
+ w:"Attention was memory-bandwidth bound, not FLOP bound. The ALUs sat idle waiting on HBM.",
+ i:"Attention memory becomes linear in N. This — not any architectural change — is what made 8k/32k/128k context practically trainable. FA2 fixed work partitioning; FA3 exploits Hopper async and FP8.",
+ pa:{t:"arXiv:2205.14135",u:"https://arxiv.org/abs/2205.14135"}},
+{id:"specdec",n:"Speculative decoding",y:2022,s:.8,b:"systems",p:["gpt3"],
+ e:"A small draft model proposes k tokens; the big model verifies them in one forward and accepts the longest correct prefix.",
+ w:"Decode is memory-bound and wastes the GPU one token at a time. Verification is provably distribution-preserving.",
+ i:"Free wall-clock at identical output distribution. Now table stakes in every serving stack."},
+{id:"paged",n:"PagedAttention / vLLM",y:2023,s:.55,b:"systems",p:["flash"],
+ e:"Manage the KV cache like virtual memory — fixed-size pages, non-contiguous, shared across sequences with copy-on-write.",
+ w:"Naive contiguous allocation wasted 60–80% of cache memory to fragmentation and over-reservation.",
+ i:"2–4× serving throughput with zero model change, and prefix sharing across requests falls out for free."},
+{id:"mtp",n:"Multi-Token Prediction",y:2024,s:.4,b:"systems",p:["specdec"],
+ e:"Train the model with extra heads predicting t+2, t+3… so it can draft for itself.",
+ w:"A denser training signal per token, and a built-in drafter that shares the base model's representations.",
+ i:"Now a training objective in DeepSeek V3/R1, Qwen3, GLM and MiniMax M2 — it improves the base model and removes the need for a separate draft model."},
+{id:"quant",n:"Quantization: post-hoc → QAT",y:2025,s:.3,b:"systems",p:["flash"],
+ e:"Progressively fewer bits, progressively earlier: LLM.int8/GPTQ/AWQ/QLoRA (post-hoc) → FP8 training (DeepSeek-V3) → native MXFP4 release (gpt-oss) → QAT from the SFT stage with MXFP4 weights / MXFP8 activations (Kimi K3).",
+ w:"Every halving of bits halves memory bandwidth, which is the binding constraint at decode.",
+ i:"Low precision is migrating from a deployment afterthought into the training objective itself. The clearest one-way trend line in the graph."},
+
+/* ── alignment ── */
+{id:"rlhf",n:"RLHF / InstructGPT",y:2022,s:.2,b:"post",pv:1,p:["gpt3"],
+ e:"Three stages: SFT on demonstrations, a reward model trained on human preference pairs, then PPO against that reward with a KL penalty to the SFT policy.",
+ w:"Next-token likelihood optimizes for plausible continuation, not helpful answer. Those diverge badly.",
+ i:"A 1.3B InstructGPT was preferred to 175B GPT-3. The node that produced ChatGPT, and therefore everything commercial that followed.",
+ pa:{t:"arXiv:2203.02155",u:"https://arxiv.org/abs/2203.02155"}},
+{id:"cai",n:"Constitutional AI / RLAIF",y:2022,s:.65,b:"post",p:["rlhf"],
+ e:"Replace most human preference labels with model-generated ones, guided by an explicit written set of principles.",
+ w:"Human labeling doesn't scale, and the values it encodes are implicit and unauditable.",
+ i:"Synthetic preference data is standard everywhere now; the explicit-principles idea seeded the modern model-spec practice."},
+{id:"dpo",n:"DPO",y:2023,s:.5,b:"post",pv:1,p:["rlhf"],
+ e:"The RLHF objective has a closed-form optimal policy — so skip the reward model and PPO, and optimize preference pairs with a simple classification loss on the policy itself.",
+ w:"PPO is unstable, holds four models in memory, and is hard to reproduce.",
+ i:"Democratized alignment. Spawned IPO, KTO, ORPO, SimPO. Frontier labs moved back to online RL for reasoning, but DPO remains the default for style and safety in open models.",
+ pa:{t:"arXiv:2305.18290",u:"https://arxiv.org/abs/2305.18290"}},
+
+/* ── reasoning ── */
+{id:"cot",n:"Chain-of-thought + verifiers",y:2022,s:.5,b:"reason",p:["gpt3"],
+ e:"Prompt for intermediate steps, then train on them: verifiers, self-consistency, STaR bootstrapping, process reward models.",
+ w:"A single forward pass has fixed depth. Serialized tokens are how a transformer buys variable compute per problem.",
+ i:"The four-year groundwork. o1 and R1 did not appear from nowhere."},
+{id:"o1",n:"o1",y:2024,s:.75,b:"reason",pv:1,p:["cot","rlhf"],
+ e:"Train with large-scale RL to produce a long internal reasoning trace before answering, and treat test-time compute as a first-class scaling axis.",
+ w:"Pretraining compute scaling was hitting data limits. Inference compute was untapped.",
+ i:"Reframed scaling from “bigger model” to “more thinking tokens.” Method kept private, which is why the next node mattered so much."},
+{id:"r1",n:"DeepSeek-R1 / GRPO",y:2025,s:.05,b:"reason",pv:1,p:["o1","dpo"],
+ e:"RLVR — reinforcement learning from verifiable rewards. On math and code you don't need a reward model: just check the answer. GRPO also drops PPO's value network, using a sampled group's mean reward as the baseline.",
+ w:"RM-based RL is capped by the reward model's quality and is hackable. A verifier is not.",
+ i:"The defining regime of 2025–26. R1-Zero showed reasoning emerging from pure RL with no SFT stage. Every major lab shipped a thinking variant within a year — by 2026 even a 2.3B Gemma 4 ships one.",
+ pa:{t:"arXiv:2501.12948",u:"https://arxiv.org/abs/2501.12948"}},
+{id:"agentic",n:"Agentic RLVR",y:2026,s:.3,b:"reason",p:["r1"],
+ e:"Extend verifiable rewards past math and code into theorem proving, science, and tool use with executable success criteria.",
+ w:"RLVR only works where answers are checkable. Growing the set of checkable domains is the scaling axis now.",
+ i:"The current frontier bet: verifiable environments, not parameters, are the scarce resource. Kimi K3's 1M context and cheap decode exist to serve long agentic rollouts."},
+
+/* ── topology & optimizer ── */
+{id:"mup",n:"muP",y:2022,s:.9,b:"topo",p:["tf"],
+ e:"Reparametrize init and learning rates so optimal hyperparameters transfer across model width.",
+ w:"A hyperparameter sweep at 100B+ is unaffordable. muP makes it a small-model problem.",
+ i:"Standard at frontier labs, and the reason large runs mostly work on the first try now."},
+{id:"hyperconn",n:"Hyper-Connections",y:2024,s:.85,b:"topo",p:["tf"],
+ e:"Widen the residual stream into n parallel streams with learned connection weights between them and each layer.",
+ w:"A single residual stream forces a tradeoff between gradient flow and representation collapse. Extra width lets the network learn its own depth-wise wiring.",
+ i:"Real gains, but it broke the identity mapping that makes residuals stable — instability and memory overhead at scale."},
+{id:"muon",n:"Muon → MuonClip",y:2025,s:.4,b:"topo",pv:1,p:["mup","qknorm"],
+ e:"Treat 2D weights as matrices, not flat vectors: orthogonalize the momentum update (Newton–Schulz) so it has balanced singular values. MuonClip adds QK-Clip — rescale Wq/Wk whenever max attention logits exceed a threshold.",
+ w:"Muon at trillion scale produced exploding attention logits and loss spikes. QK-Clip attacks the cause at the weights rather than damping the symptom.",
+ i:"Kimi K2 reported zero loss spikes across 15.5T tokens — the practical proof a non-Adam optimizer works at frontier scale. The first serious challenge to Adam's decade-long monopoly.",
+ pa:{t:"arXiv:2507.20534",u:"https://arxiv.org/abs/2507.20534"}},
+{id:"mhc",n:"mHC",y:2025,s:.9,b:"topo",pv:1,p:["hyperconn"],
+ e:"Project hyper-connections' connection space onto a manifold that restores the identity-mapping property, then optimize the implementation so memory overhead is tolerable.",
+ w:"Keep HC's expressiveness, get residual stability back.",
+ i:"Shipped in DeepSeek V4. Makes learned residual topology practical at trillion scale.",
+ pa:{t:"papers/2512.24880",u:"https://huggingface.co/papers/2512.24880"}},
+{id:"attnres",n:"Attention Residuals",y:2026,s:.25,b:"topo",pv:1,p:["hyperconn","gpt2"],
+ e:"Replace uniform residual accumulation with softmax attention over the outputs of all preceding layers — each layer learns input-dependent weights over its own history.",
+ w:"In Pre-LN the stream grows with depth and each layer's contribution is progressively diluted, forcing late layers to emit ever-larger outputs to be heard.",
+ i:"1.25× compute-scaling advantage, +7.5% GPQA-Diamond, +3.6% MATH, +3.1% HumanEval, for <4% training and <2% inference overhead. Block AttnRes (~8 blocks) captures most of it cheaply. Shipped in Kimi K3.",
+ pa:{t:"papers/2603.15031",u:"https://huggingface.co/papers/2603.15031"}},
+
+/* ── multimodality ── */
+{id:"latefusion",n:"Late fusion / adapters",y:2023,s:.2,b:"mm",p:["bert","llama"],
+ e:"Run a separate pretrained vision encoder and project its output into the LLM's token space with a small adapter.",
+ w:"Cheapest possible path — it reuses two existing pretrained artifacts.",
+ i:"The standard VLM recipe for years (CLIP → Flamingo → LLaVA), and where the encoder branch went to live."},
+{id:"earlyfusion",n:"Early fusion",y:2024,s:.55,b:"mm",p:["latefusion"],
+ e:"Tokenize images and audio into the same sequence as text and train on mixed data from pretraining, not as a bolt-on stage.",
+ w:"Adapters keep the modalities in separate representational worlds; cross-modal reasoning suffers.",
+ i:"“Natively multimodal” becomes the standard claim — Chameleon, Llama 4."},
+{id:"encfree",n:"Encoder-free multimodal",y:2026,s:.3,b:"mm",pv:1,p:["earlyfusion"],
+ e:"Delete the vision encoder. Gemma 4's 12B ingests raw 48×48×3 image patches through a 35M-parameter matmul (replacing a 550M encoder) and raw 40ms audio chunks projected straight into embedding space.",
+ w:"If the LLM learns the visual features anyway, a separate encoder is redundant parameters and a redundant training stage.",
+ i:"The logical endpoint of fusion — and structurally the same move as NoPE and aux-loss-free balancing: delete the special-purpose component, let the main stack learn it."},
+
+/* ── frontier ── */
+{id:"dsv4",n:"DeepSeek V4",y:2026,s:.86,b:"frontier",ln:-1.2,p:["csa","mhc","latentmoe","r1"],
+ e:"1.6T total / 49B active. CSA + HCA interleaved sparse attention, mHC residual topology, KV in FP8, 1M default context.",
+ w:"Push long-context serving economics to where 1M tokens is the default, not a premium tier.",
+ i:"The first frontier model whose headline change is the residual topology rather than the attention."},
+{id:"kimik3",n:"Kimi K3",y:2026,s:.86,b:"frontier",ln:1.4,p:["kda","hybrid","attnres","latentmoe","muon","nope","quant","agentic"],
+ e:"2.8T total, 16 of 896 experts active. KDA + Gated MLA at 3:1, Attention Residuals, Stable LatentMoE with quantile balancing, per-head Muon, NoPE throughout, MXFP4/MXFP8 QAT from SFT, 1M context.",
+ w:"~2.5× scaling efficiency over Kimi K2 by replacing every standard component with an efficiency-optimized one at once.",
+ i:"The most aggressive merge node in the graph — six separate branches land here simultaneously. Also the strongest live bet that RoPE is optional."},
+{id:"qwen35",n:"Qwen3.5",y:2026,s:.86,b:"frontier",ln:3.1,p:["gdn","hybrid","qknorm","r1"],
+ e:"397B total / 17B active. Gated DeltaNet : full attention at 3:1, with gated attention output to suppress attention sinks and massive activations.",
+ w:"Bet the model on linear attention being production-ready, with a minority of full-attention layers as the safety net.",
+ i:"Architecturally the most distinctive frontier MoE of the era — it went a genuinely different direction from the DeepSeek-shaped consensus."},
+{id:"gemma4",n:"Gemma 4",y:2026,s:.86,b:"frontier",ln:-3.4,p:["encfree","overtrain","yarn","swa","r1"],
+ e:"2.3B–31B, dense plus one 26B-A4B MoE. GQA with 5:1 local:global sliding window, pp-RoPE on global layers (1M base) vs 10k local, QK-Norm, pre+post RMSNorm, 37.5% KV-cache reduction, encoder-free multimodal at 12B, thinking mode.",
+ w:"Frontier-adjacent quality at sizes that run on one device — which makes every saved byte of KV cache count double.",
+ i:"Proof that the 2026 stack, including RLVR thinking modes, compresses all the way down to 2.3B open weights."},
+{id:"glm5",n:"GLM-5",y:2026,s:.86,b:"frontier",ln:-2.3,p:["mla","dsa","mtp"],
+ e:"MLA plus DeepSeek Sparse Attention, MoE, multi-token prediction.",
+ w:"Take the DeepSeek-V3.2 recipe wholesale rather than inventing a competing attention mechanism.",
+ i:"The clearest evidence that MLA + DSA has become a portable, adoptable standard rather than one lab's trick."},
+{id:"minimax",n:"MiniMax M2.5",y:2026,s:.86,b:"frontier",ln:4.3,p:["llama","dsmoe","r1"],
+ e:"Sparse MoE with only ~10B active — but plain full multi-head attention, deliberately.",
+ w:"Efficiency mechanisms add failure modes. Spend the sparsity budget on the FFN and keep attention boring and reliable.",
+ i:"The dissenting vote, and a useful control: it means the attention question is genuinely open, not merely unfinished."}
+];
+
+/* ══════════════ layout ══════════════ */
+const YROW = {2014:0, 2017:1.35, 2018:2.5, 2019:3.5, 2020:4.5, 2021:5.5,
+              2022:6.5, 2023:7.7, 2024:9.0, 2025:10.4, 2026:11.9};
+const RH=118, LW=186, NW=164, NH=44, PADX=110, PADY=112;
+
+const byId = Object.fromEntries(N.map(d=>[d.id,d]));
+N.forEach(d=>{
+  const lane = (d.ln!==undefined) ? d.ln : LANE[d.b];
+  d.yr = d.yl || String(d.y);
+  d.x = PADX + (lane+6)*LW;
+  d.y = PADY + (YROW[d.y] + (d.s||0)*0.92) * RH;
+  d.c = (B[d.b]||B.trunk).c;
+});
+const W = PADX*2 + 13*LW + NW;
+const H = PADY*2 + (YROW[2026]+1.2)*RH;
+
+/* ancestry / descendants */
+const kids = {}; N.forEach(d=>d.p.forEach(p=>{(kids[p]=kids[p]||[]).push(d.id)}));
+function up(id, acc=new Set()){ (byId[id].p||[]).forEach(p=>{ if(!acc.has(p)){acc.add(p); up(p,acc);} }); return acc; }
+function down(id, acc=new Set()){ (kids[id]||[]).forEach(k=>{ if(!acc.has(k)){acc.add(k); down(k,acc);} }); return acc; }
+
+/* ══════════════ render ══════════════ */
+const NS="http://www.w3.org/2000/svg";
+const svg=document.getElementById("svg");
+const gY=document.getElementById("gYears"), gL=document.getElementById("gLanes"),
+      gE=document.getElementById("gEdges"), gN=document.getElementById("gNodes");
+const el=(t,a={})=>{const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); return e;};
+
+/* year ruler */
+Object.entries(YROW).forEach(([yr,row])=>{
+  const y = PADY + row*RH - 34;
+  gY.appendChild(el("line",{class:"yearline",x1:40,y1:y,x2:W-40,y2:y}));
+  const t=el("text",{class:"yeartext",x:44,y:y-7}); t.textContent=yr; gY.appendChild(t);
+});
+[["2014–2017  ancestry & trunk",0],["2018–2022  scale, then the correction",2.5],
+ ["2023–2024  efficiency takes over",7.7],["2025–2026  portfolios, not choices",10.4]]
+ .forEach(([label,row])=>{
+  const t=el("text",{class:"eratext",x:44,y:PADY+row*RH-52}); t.textContent=label; gY.appendChild(t);
+});
+
+/* lane captions + guides */
+Object.entries(LANE).forEach(([b,lane])=>{
+  const x=PADX+(lane+6)*LW;
+  gL.appendChild(el("line",{class:"laneguide",x1:x+NW/2,y1:PADY-56,x2:x+NW/2,y2:H-60,style:`--c:${B[b].c}`}));
+  const t=el("text",{class:"lanecap",x:x,y:PADY-70,style:`--c:${B[b].c}`});
+  t.textContent=B[b].n; gL.appendChild(t);
+});
+
+/* edges */
+const edgeEls=[];
+N.forEach(d=>d.p.forEach(pid=>{
+  const p=byId[pid]; if(!p) return;
+  const x1=p.x+NW/2, y1=p.y+NH, x2=d.x+NW/2, y2=d.y;
+  const dy=Math.max(34,(y2-y1)*0.42);
+  const path=el("path",{class:"edge","data-from":pid,"data-to":d.id,
+    style:`--c:${d.c}`,
+    d:`M${x1},${y1} C${x1},${y1+dy} ${x2},${y2-dy} ${x2},${y2}`});
+  gE.appendChild(path); edgeEls.push(path);
+}));
+
+/* nodes */
+const nodeEls={};
+N.forEach(d=>{
+  const g=el("g",{class:"node"+(d.pv?" pivot":""),tabindex:"0",role:"button",
+    style:`--c:${d.c}`,transform:`translate(${d.x},${d.y})`,"data-id":d.id});
+  g.appendChild(el("rect",{class:"body",width:NW,height:NH,x:0,y:0}));
+  g.appendChild(el("rect",{class:"tab",width:4,height:NH-2,x:1,y:1,rx:2}));
+  const nm=el("text",{class:"nm",x:15,y:20}); nm.textContent=d.n;
+  if(d.n.length>22) nm.setAttribute("font-size", d.n.length>28?"10.6":"11.6");
+  const yr=el("text",{class:"yr",x:15,y:34}); yr.textContent=d.yr+(d.pv?"   ✦ branch point":"");
+  g.appendChild(nm); g.appendChild(yr);
+  const ttl=el("title"); ttl.textContent=d.n+" — "+d.e; g.appendChild(ttl);
+  gN.appendChild(g); nodeEls[d.id]=g;
+});
+
+/* ══════════════ interaction ══════════════ */
+let sel=null, activeBranches=new Set(Object.keys(B));
+
+function paint(){
+  const q=document.getElementById("q").value.trim().toLowerCase();
+  let lit=null;
+  if(sel){ lit=new Set([sel,...up(sel),...down(sel)]); }
+
+  N.forEach(d=>{
+    const g=nodeEls[d.id];
+    const branchOn=activeBranches.has(d.b);
+    const qHit = !q || (d.n+" "+d.e+" "+d.i+" "+d.w+" "+d.yr+" "+B[d.b].n).toLowerCase().includes(q);
+    const inLit = lit ? lit.has(d.id) : true;
+    g.classList.toggle("dim", !(branchOn && qHit && inLit));
+    g.classList.toggle("lit", !!(lit && lit.has(d.id) && d.id!==sel));
+    g.classList.toggle("sel", d.id===sel);
+  });
+  edgeEls.forEach(p=>{
+    const f=p.dataset.from, t=p.dataset.to;
+    const on = lit ? (lit.has(f)&&lit.has(t)) : (activeBranches.has(byId[f].b)&&activeBranches.has(byId[t].b));
+    p.classList.toggle("lit", !!(lit&&on));
+    p.classList.toggle("dim", !on);
+  });
+}
+
+const detail=document.getElementById("detail");
+function esc(s){return String(s).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));}
+function showEmpty(){
+  detail.innerHTML=`<div class="empty">
+    <h2>Read the edges, not the nodes.</h2>
+    <p>Each node is an architecture, a mechanism, or a training regime. Each <em>edge</em> is the single design decision that got you from one to the next — that is where the story is.</p>
+    <ul>
+      <li><strong>Click a node</strong> to isolate its full lineage: every ancestor above it, every descendant below.</li>
+      <li><strong>✦ marks a branch point</strong> — a change that forced everyone downstream to pick a side.</li>
+      <li><strong>Columns are branches</strong>, not chronology. Vertical position is the year.</li>
+      <li>Filter with the chips above, or search. <kbd>Esc</kbd> clears.</li>
+    </ul>
+    <p style="margin-top:18px">Note the shape: after 2023 the trunk stops being about capability and becomes about <strong>cost per unit of capability</strong>. There is no branch after Chinchilla whose pitch is “this is bigger.”</p>
+  </div>`;
+}
+function show(id){
+  const d=byId[id];
+  const pars=(d.p||[]).map(p=>byId[p]).filter(Boolean);
+  const chn=(kids[id]||[]).map(k=>byId[k]).filter(Boolean);
+  detail.innerHTML=`
+    <div class="eyebrow" style="--c:${d.c}"><span class="sw"></span>${esc(B[d.b].n)}${d.pv?" · branch point":""}</div>
+    <h2>${esc(d.n)}</h2>
+    <p class="meta">${d.yr}${d.pa?" · "+esc(d.pa.t):""}</p>
+    <dl>
+      <div><dt>Edge — what changed</dt><dd>${esc(d.e)}</dd></div>
+      <div><dt>Why</dt><dd>${esc(d.w)}</dd></div>
+      <div><dt>Impact</dt><dd>${esc(d.i)}</dd></div>
+    </dl>
+    ${d.pa?`<div class="divider"></div><a class="paper" href="${d.pa.u}" target="_blank" rel="noopener">${esc(d.pa.t)} ↗</a>`:""}
+    ${pars.length?`<div class="divider"></div><dt style="font:700 10.5px/1 'JetBrains Mono',monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Descends from</dt>
+      <div class="parents">${pars.map(p=>`<button class="plink" data-go="${p.id}" style="--c:${p.c}"><span class="sw"></span>${esc(p.n)}<span class="arw">${p.yr}</span></button>`).join("")}</div>`:""}
+    ${chn.length?`<div class="divider"></div><dt style="font:700 10.5px/1 'JetBrains Mono',monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Leads to</dt>
+      <div class="parents">${chn.map(p=>`<button class="plink" data-go="${p.id}" style="--c:${p.c}"><span class="sw"></span>${esc(p.n)}<span class="arw">${p.yr}</span></button>`).join("")}</div>`:""}
+  `;
+  detail.scrollTop=0;
+  detail.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>select(b.dataset.go,true));
+}
+function select(id,center){ sel=id; show(id); paint(); if(center) centerOn(byId[id]); }
+function clearSel(){ sel=null; showEmpty(); paint(); }
+
+gN.addEventListener("click",e=>{const g=e.target.closest(".node"); if(g) select(g.dataset.id);});
+gN.addEventListener("keydown",e=>{
+  const g=e.target.closest(".node");
+  if(g&&(e.key==="Enter"||e.key===" ")){e.preventDefault(); select(g.dataset.id);}
+});
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){document.getElementById("q").value=""; clearSel();} });
+
+/* branch chips */
+const rail=document.getElementById("rail");
+Object.entries(B).forEach(([k,v])=>{
+  if(k==="frontier"&&!N.some(n=>n.b==="frontier")) return;
+  const b=document.createElement("button");
+  b.className="chip"; b.setAttribute("aria-pressed","true"); b.style.setProperty("--c",v.c);
+  b.innerHTML=`<span class="sw"></span>${v.n}`;
+  b.onclick=()=>{
+    const on=b.getAttribute("aria-pressed")==="true";
+    b.setAttribute("aria-pressed", on?"false":"true");
+    on?activeBranches.delete(k):activeBranches.add(k);
+    paint();
+  };
+  rail.appendChild(b);
+});
+document.getElementById("q").addEventListener("input",paint);
+document.getElementById("clear").onclick=()=>{document.getElementById("q").value=""; clearSel();};
+
+/* ══════════════ pan / zoom ══════════════ */
+const world=document.getElementById("world"), canvas=document.getElementById("canvas");
+let vx=0, vy=0, vk=1;
+function apply(){ world.setAttribute("transform",`translate(${vx},${vy}) scale(${vk})`); }
+function fit(){
+  const r=canvas.getBoundingClientRect();
+  vk=Math.min(r.width/W, r.height/H, 1)*0.96;
+  vx=(r.width - W*vk)/2; vy=20; apply();
+}
+function home(){                 /* readable opening view, anchored on the trunk */
+  const r=canvas.getBoundingClientRect();
+  vk=Math.min(0.82, r.width/(LW*7.4));
+  vx=r.width/2 - (PADX+6*LW+NW/2)*vk; vy=28; apply();
+}
+function centerOn(d){
+  const r=canvas.getBoundingClientRect();
+  vk=Math.max(vk,0.62);
+  vx=r.width/2 - (d.x+NW/2)*vk; vy=r.height/2 - (d.y+NH/2)*vk; apply();
+}
+document.getElementById("fit").onclick=fit;
+canvas.addEventListener("wheel",e=>{
+  e.preventDefault();
+  const r=canvas.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top;
+  const f=Math.exp(-e.deltaY*0.0016), nk=Math.min(2.6,Math.max(0.16,vk*f));
+  vx=mx-(mx-vx)*(nk/vk); vy=my-(my-vy)*(nk/vk); vk=nk; apply();
+},{passive:false});
+let drag=null;
+canvas.addEventListener("pointerdown",e=>{
+  if(e.target.closest(".node")) return;
+  drag={x:e.clientX,y:e.clientY,vx,vy}; canvas.classList.add("drag");
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener("pointermove",e=>{
+  if(!drag) return; vx=drag.vx+(e.clientX-drag.x); vy=drag.vy+(e.clientY-drag.y); apply();
+});
+["pointerup","pointercancel"].forEach(t=>canvas.addEventListener(t,()=>{drag=null; canvas.classList.remove("drag")}));
+
+document.querySelector(".brand p").textContent =
+  `transformer 2017 → the 2026 frontier · ${N.length} nodes · every edge is one design decision`;
+showEmpty(); paint(); home();
+addEventListener("resize",()=>{ if(!sel) home(); });
+</script>
